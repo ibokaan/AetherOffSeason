@@ -3,13 +3,18 @@
 // the WPILib BSD license file in the root directory of this project.
 
 package frc.robot.subsystems;
-
+import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import edu.wpi.first.wpilibj.drive.RobotDriveBase.MotorType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class ExampleSubsystem extends SubsystemBase {
+public class DriveSubsystem extends SubsystemBase {
+
+
+  private final SparkMax m_leftLeader = new SparkMax(1, MotorType.kBrushless);
   /** Creates a new ExampleSubsystem. */
-  public ExampleSubsystem() {}
+  public DriveSubsystem() {}
 
   /**
    * Example command factory method.
