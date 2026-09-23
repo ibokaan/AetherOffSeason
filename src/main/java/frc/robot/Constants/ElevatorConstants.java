@@ -15,8 +15,8 @@ public final class ElevatorConstants {
     public static final double kMaxHeightMeters = 1.2; // Maksimum asansör yüksekliği
 
     // PID ve Feedforward (kG: Asansörün ağırlığını yenmek için verilen sabit voltaj)
-    public static final double kP = 12.0;
-    public static final double kI = 0.0;
-    public static final double kD = 0.5;
+    public static final double kP = 12.0; // Proportional Gain (Orantısal Kazanç)
+    public static final double kI = 0.0; // Integral Gain (İntegral Kazanç)
+    public static final double kD = 0.5; // Derivative Gain (Türev Kazanç)
     public static final double kG = 0.8; // Gravity Gain (Ağırlık dengesi)
 }
