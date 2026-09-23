@@ -3,50 +3,50 @@
 // the WPILib BSD license file in the root directory of this project.
 
 package frc.robot.subsystems;
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import edu.wpi.first.wpilibj.drive.RobotDriveBase.MotorType;
-import edu.wpi.first.wpilibj2.command.Command;
+import com.ctre.phoenix6.hardware.Pigeon2;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.constants.DriveConstants;
 
 public class DriveSubsystem extends SubsystemBase {
+    private final SwerveModule frontLeft = new SwerveModule(
+        DriveConstants.kFrontLeftDriveCanId, DriveConstants.kFrontLeftTurnCanId, DriveConstants.kFrontLeftEncoderOffset);
+    private final SwerveModule frontRight = new SwerveModule(
+        DriveConstants.kFrontRightDriveCanId, DriveConstants.kFrontRightTurnCanId, DriveConstants.kFrontRightEncoderOffset);
+    private final SwerveModule backLeft = new SwerveModule(
+        DriveConstants.kBackLeftDriveCanId, DriveConstants.kBackLeftTurnCanId, DriveConstants.kBackLeftEncoderOffset);
+    private final SwerveModule backRight = new SwerveModule(
+        DriveConstants.kBackRightDriveCanId, DriveConstants.kBackRightTurnCanId, DriveConstants.kBackRightEncoderOffset);
 
+    private final Pigeon2 gyro = new Pigeon2(DriveConstants.kPigeonCanId);
 
-  private final SparkMax m_leftLeader = new SparkMax(1, MotorType.kBrushless);
-  /** Creates a new ExampleSubsystem. */
-  public DriveSubsystem() {}
+    public DriveSubsystem() {
+        zeroHeading();
+    }
 
-  /**
-   * Example command factory method.
-   *
-   * @return a command
-   */
-  public Command exampleMethodCommand() {
-    // Inline construction of command goes here.
-    // Subsystem::RunOnce implicitly requires `this` subsystem.
-    return runOnce(
-        () -> {
-          /* one-time action goes here */
-        });
-  }
+    public void drive(double xSpeed, double ySpeed, double rot, boolean fieldRelative) {
+        SwerveModuleState[] swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(
+            fieldRelative
+                ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, rot, getHeading())
+                : new ChassisSpeeds(xSpeed, ySpeed, rot)
+        );
 
-  /**
-   * An example method querying a boolean state of the subsystem (for example, a digital sensor).
-   *
-   * @return value of some boolean subsystem state, such as a digital sensor.
-   */
-  public boolean exampleCondition() {
-    // Query some boolean state, such as a digital sensor.
-    return false;
-  }
+        SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, DriveConstants.kMaxSpeedMetersPerSecond);
 
-  @Override
-  public void periodic() {
-    // This method will be called once per scheduler run
-  }
+        frontLeft.setDesiredState(swerveModuleStates[0]);
+        frontRight.setDesiredState(swerveModuleStates[1]);
+        backLeft.setDesiredState(swerveModuleStates[2]);
+        backRight.setDesiredState(swerveModuleStates[3]);
+    }
 
-  @Override
-  public void simulationPeriodic() {
-    // This method will be called once per scheduler run during simulation
-  }
+    public void zeroHeading() {
+        gyro.reset();
+    }
+
+    public Rotation2d getHeading() {
+        return Rotation2d.fromDegrees(gyro.getYaw().getValueAsDouble());
+    }
 }
