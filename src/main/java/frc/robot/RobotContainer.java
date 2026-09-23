@@ -4,13 +4,14 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.constants.ElevatorConstants;
+import frc.robot.Constants.ElevatorConstants;
 import frc.robot.commands.elevator.SetElevatorPosition;
 import frc.robot.subsystems.ElevatorSubsystem;
+import frc.robot.Constants;
 
 public class RobotContainer {
     private final ElevatorSubsystem elevator = new ElevatorSubsystem();
-    private final CommandXboxController driverController = new CommandXboxController(0);
+    private final CommandXboxController driverController = new CommandXboxController(Constants.kDriverControllerPort);
 
     public RobotContainer() {
         configureButtonBindings();

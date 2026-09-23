@@ -13,6 +13,8 @@ package frc.robot;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
+  public static final int kDriverControllerPort = 0; // Sürücü kontrolcüsü için USB portu
+  public static final double kDriveDeadband = 0.05; // Joystick ölü bölgesi (±5%)
  
   }
 
