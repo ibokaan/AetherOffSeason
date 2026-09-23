@@ -1,45 +1,48 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 package frc.robot;
 
-import frc.robot.Constants.OperatorConstants;
-import frc.robot.commands.Autos;
-import frc.robot.commands.Joystick;
-import frc.robot.subsystems.DriveSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.constants.ElevatorConstants;
+import frc.robot.commands.elevator.SetElevatorPosition;
+import frc.robot.subsystems.ElevatorSubsystem;
 
-/**
- * This class is where the bulk of the robot should be declared. Since Command-based is a
- * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
- * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
- * subsystems, commands, and trigger mappings) should be declared here.
- */
 public class RobotContainer {
-  private DriveSubsystem drive = new DriveSubsystem();
-  private ElevatorSubsystem elevator = new ElevatorSubsystem();
+    private final ElevatorSubsystem elevator = new ElevatorSubsystem();
+    private final CommandXboxController driverController = new CommandXboxController(0);
 
-  private Joystick joystick = new Joystick(Constants.JOYSTICK_PORT);
-  private int otonomMod = 0;
+    public RobotContainer() {
+        configureButtonBindings();
 
-  public RobotContainer() {
-    drive.setDefaultCommand(new RunCommand(() -> drive.sur(-joystick.getRawAxis(1)), drive))
-    joystick_ayari();
+        // Varsayılan Sürüş: Joystick Sol Y ekseni ile manuel asansör kontrolü
+        elevator.setDefaultCommand(
+            new RunCommand(
+                () -> elevator.setPower(-driverController.getLeftY()),
+                elevator
+            )
+        );
+    }
 
+    private void configureButtonBindings() {
+        // 'A' Butonu -> Tabana İndir
+        driverController.a().onTrue(
+            new SetElevatorPosition(elevator, ElevatorConstants.kHomePositionMeters)
+        );
 
-  }
-  
-  private void joystick_ayari() {
-    //Joystick drive baglantisi
+        // 'X' Butonu -> Düşük Hedef Seviyesi (Low Goal)
+        driverController.x().onTrue(
+            new SetElevatorPosition(elevator, ElevatorConstants.kLowGoalMeters)
+        );
 
-    new JoystickButton(joystick, 3).whileTrue(new RunCommand(() -> elevator.sur(0.5), elevator)).onFalse(new RunCommand(() -> elevator.sur(0.0), elevator));
+        // 'Y' Butonu -> Yüksek Hedef Seviyesi (High Goal)
+        driverController.y().onTrue(
+            new SetElevatorPosition(elevator, ElevatorConstants.kHighGoalMeters)
+        );
+    }
 
-    new JoystickButton(joystick, 4).whileTrue(new RunCommand(() -> elevator.sur(-0.3), elevator)).onFalse(new RunCommand(() -> elevator.sur(0.0), elevator));
-
-
-  }
- 
+    public Command getAutonomousCommand() {
+        // Otonom periyotta asansörü doğrudan yüksek hedefe kaldırır
+        return new SetElevatorPosition(elevator, ElevatorConstants.kHighGoalMeters);
+    }
 }
