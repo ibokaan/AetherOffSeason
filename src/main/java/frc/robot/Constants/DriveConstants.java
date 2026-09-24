@@ -42,4 +42,22 @@ public final class DriveConstants {
     // Sürüş Limitleri
     public static final double kMaxSpeedMetersPerSecond = 4.5;
     public static final double kMaxAngularSpeed = 2 * Math.PI; // rad/s
+
+    public static final double kTurnGearRatio = 150.0 / 7.0; // Örn: MK4i Steering Gear Ratio
+    public static final double kTurnEncoderPositionFactor = (2 * Math.PI) / kTurnGearRatio; // Motor turunu tekerlek radyanına çevirir
+    public static final double kTurnEncoderVelocityFactor = kTurnEncoderPositionFactor / 60.0; // RPM'i rad/s'ye çevirir
+
+    // Swerve Modül Dişli Oranları ve Ölçüleri (Örnektir, modül modelinize göre güncelleyin)
+    public static final double kWheelDiameterMeters = 0.1016; // 4 inç tekerlek = ~0.1016m
+    public static final double kDriveGearRatio = 6.75; // Örn: MK4i L2 Drive Gear Ratio
+    public static final double kTurnGearRatio = 150.0 / 7.0; // Örn: MK4i Turn Gear Ratio
+
+    // Encoder Dönüştürme Faktörleri
+    // Sürüş Motoru: Rotasyonu Metreye Çevirir
+    public static final double kDriveEncoderPositionFactor = (Math.PI * kWheelDiameterMeters) / kDriveGearRatio;
+    public static final double kDriveEncoderVelocityFactor = kDriveEncoderPositionFactor / 60.0; // RPM -> m/s
+
+    // Dönüş Motoru: Rotasyonu Radyana Çevirir
+    public static final double kTurnEncoderPositionFactor = (2 * Math.PI) / kTurnGearRatio;
+    public static final double kTurnEncoderVelocityFactor = kTurnEncoderPositionFactor / 60.0; // RPM -> rad/s
 }
