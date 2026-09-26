@@ -6,6 +6,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkBase.PersistMode;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -16,13 +17,17 @@ public class SwerveModule {
     private final SparkMax driveMotor;
     private final SparkMax turnMotor;
 
+    private final double encoderOffset; // Offset saklamak icin eklendi
+
     private final PIDController turnPIDController = new PIDController(0.5, 0.0, 0.0);
 
     public SwerveModule(int driveCanId, int turnCanId, double encoderOffset) {
+        this.encoderOffset = encoderOffset;
+
         driveMotor = new SparkMax(driveCanId, MotorType.kBrushless);
         turnMotor = new SparkMax(turnCanId, MotorType.kBrushless);
 
-        // --- 1. SÜRÜŞ MOTORU KONFİGÜRASYONU (YENİ EKLENEN) ---
+        // --- 1. SÜRÜŞ MOTORU KONFİGÜRASYONU ---
         SparkMaxConfig driveConfig = new SparkMaxConfig();
         driveConfig.encoder
             .positionConversionFactor(DriveConstants.kDriveEncoderPositionFactor)
@@ -30,7 +35,7 @@ public class SwerveModule {
 
         driveMotor.configure(driveConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-        // --- 2. DÖNÜŞ MOTORU KONFİGÜRASYONU (YENİ EKLENEN) ---
+        // --- 2. DÖNÜŞ MOTORU KONFİGÜRASYONU ---
         SparkMaxConfig turnConfig = new SparkMaxConfig();
         turnConfig.encoder
             .positionConversionFactor(DriveConstants.kTurnEncoderPositionFactor)
@@ -38,29 +43,43 @@ public class SwerveModule {
 
         turnMotor.configure(turnConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-        // PID'nin -PI ile +PI arasında kesintisiz dönmesini sağlar
+        // PID'nin -PI ile +PI radyan arasında kesintisiz dönmesini sağlar
         turnPIDController.enableContinuousInput(-Math.PI, Math.PI);
+    }
+
+    /** Modülün anlık dönme acısını offset dahil hesaplar (Radyan) */
+    private Rotation2d getTurnAngle() {
+        // Enkoder konumundan offset cıkarılarak gercek acı bulunur
+        double rawRadians = turnMotor.getEncoder().getPosition();
+        return Rotation2d.fromRadians(rawRadians - encoderOffset);
     }
 
     public SwerveModuleState getState() {
         return new SwerveModuleState(
-            driveMotor.getEncoder().getVelocity(), // m/s cinsinden okur
-            new Rotation2d(turnMotor.getEncoder().getPosition()) // radyan cinsinden okur
+            driveMotor.getEncoder().getVelocity(), // m/s
+            getTurnAngle()
         );
     }
 
     public SwerveModulePosition getPosition() {
         return new SwerveModulePosition(
-            driveMotor.getEncoder().getPosition(), // Metre cinsinden okur
-            new Rotation2d(turnMotor.getEncoder().getPosition()) // radyan cinsinden okur
+            driveMotor.getEncoder().getPosition(), // metre
+            getTurnAngle()
         );
     }
 
     public void setDesiredState(SwerveModuleState desiredState) {
-        SwerveModuleState state = SwerveModuleState.optimize(desiredState, getState().angle);
+        // 1. En kısa dönüş rotasını hesapla (Optimize et)
+        SwerveModuleState state = SwerveModuleState.optimize(desiredState, getTurnAngle());
 
-        driveMotor.set(state.speedMetersPerSecond / DriveConstants.kMaxSpeedMetersPerSecond);
-        double turnOutput = turnPIDController.calculate(getState().angle.getRadians(), state.angle.getRadians());
+        // 2. Sürüş motoru gücü (-1.0 ile 1.0 arası)
+        double driveOutput = state.speedMetersPerSecond / DriveConstants.kMaxSpeedMetersPerSecond;
+        driveMotor.set(driveOutput);
+
+        // 3. Dönüş motoru PID hesabı ve sınırlandırma (Clamp)
+        double turnOutput = turnPIDController.calculate(getTurnAngle().getRadians(), state.angle.getRadians());
+        turnOutput = MathUtil.clamp(turnOutput, -1.0, 1.0); // Motor gücünün %100'ü aşmasını önler
+        
         turnMotor.set(turnOutput);
     }
 
