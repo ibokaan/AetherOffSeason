@@ -44,15 +44,15 @@ public class SwerveModule {
 
     public SwerveModuleState getState() {
         return new SwerveModuleState(
-            driveMotor.getEncoder().getVelocity(), // Artık m/s cinsinden okur
-            new Rotation2d(turnMotor.getEncoder().getPosition()) // Artık radyan cinsinden okur
+            driveMotor.getEncoder().getVelocity(), // m/s cinsinden okur
+            new Rotation2d(turnMotor.getEncoder().getPosition()) // radyan cinsinden okur
         );
     }
 
     public SwerveModulePosition getPosition() {
         return new SwerveModulePosition(
-            driveMotor.getEncoder().getPosition(), // Artık metre cinsinden okur
-            new Rotation2d(turnMotor.getEncoder().getPosition()) // Artık radyan cinsinden okur
+            driveMotor.getEncoder().getPosition(), // Metre cinsinden okur
+            new Rotation2d(turnMotor.getEncoder().getPosition()) // radyan cinsinden okur
         );
     }
 

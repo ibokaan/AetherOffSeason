@@ -2,6 +2,8 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+
+// Kendi oluşturduğumuz paketler:
 import frc.robot.constants.Constants;
 import frc.robot.constants.ElevatorConstants;
 import frc.robot.commands.drive.TeleopDriveCommand;
@@ -37,7 +39,7 @@ public class RobotContainer {
         // Gyro (Ön Yön) Sıfırlama -> Start Butonu
         driverController.start().onTrue(new ZeroGyroCommand(driveSubsystem));
 
-        // Asansör Yükseklik Seviyeleri (Sizin önceden yazdığınız buton atamaları)
+        // Asansör Yükseklik Seviyeleri (Buton atamaları)
         driverController.a().onTrue(new SetElevatorPosition(elevator, ElevatorConstants.kHomePositionMeters));
         driverController.x().onTrue(new SetElevatorPosition(elevator, ElevatorConstants.kLowGoalMeters));
         driverController.y().onTrue(new SetElevatorPosition(elevator, ElevatorConstants.kHighGoalMeters));

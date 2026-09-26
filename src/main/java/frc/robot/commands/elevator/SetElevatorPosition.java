@@ -10,7 +10,7 @@ public class SetElevatorPosition extends Command {
     public SetElevatorPosition(ElevatorSubsystem elevator, double targetHeight) {
         this.elevator = elevator;
         this.targetHeight = targetHeight;
-        addRequirements(elevator); // Bu komut çalışırken başka bir komut asansörü çakışarak süremez
+        addRequirements(elevator); // Bu komut calisirken baska bir komut asansoru cakisarak suremez
     }
 
     @Override
@@ -20,13 +20,13 @@ public class SetElevatorPosition extends Command {
 
     @Override
     public boolean isFinished() {
-        // Hedefe ±2 cm yaklaştıysa komut biter
+        // Hedefe ±2 cm yaklastiysa komut biter
         return Math.abs(elevator.getHeightMeters() - targetHeight) < 0.02;
     }
 
     @Override
     public void end(boolean interrupted) {
-        // Komut bittiğinde veya iptal edildiğinde dur/sabit tut
+        // Komut bittiginde veya iptal edildiginde dur/sabit tut
         if (interrupted) {
             elevator.stop();
         }

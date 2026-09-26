@@ -10,7 +10,7 @@ public class TeleopDriveCommand extends Command {
     private final DoubleSupplier strafeSup;
     private final DoubleSupplier rotationSup;
 
-    public TeleopDriveCommand( // TeleopDriveCommand yapıcı
+    public TeleopDriveCommand( // TeleopDriveCommand yapici
             DriveSubsystem driveSubsystem,
             DoubleSupplier translationSup,
             DoubleSupplier strafeSup,
@@ -22,13 +22,13 @@ public class TeleopDriveCommand extends Command {
         addRequirements(driveSubsystem);
     }
 
-    @Override // Bu Komut çalıştırılmak üzere zamanlandığında art arda çağrılır.
+    @Override // Bu Komut calistirilmak uzere zamanlandiginda art arda cagrilir.
     public void execute() { 
         driveSubsystem.drive(
             translationSup.getAsDouble(),
             strafeSup.getAsDouble(),
             rotationSup.getAsDouble(),
-            true // Field-Centric (Sürücüye göre yön)
+            true // Field-Centric (Surucuye gore yon)
         );
     }
 }

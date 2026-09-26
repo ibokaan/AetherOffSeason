@@ -16,53 +16,68 @@ public class ElevatorSubsystem extends SubsystemBase {
     private final SparkMax leftMotor;
     private final SparkMax rightMotor;
 
-    // Yavaş kalkış ve duruş için Profil Tabanlı PID
+    // Yavas kalkis ve durus icin Profil Tabanli PID Controller
     private final ProfiledPIDController pidController = new ProfiledPIDController(
         ElevatorConstants.kP, ElevatorConstants.kI, ElevatorConstants.kD,
-        new TrapezoidProfile.Constraints(2.0, 4.0) // Maksimum Hız ve İvme
+        new TrapezoidProfile.Constraints(2.0, 4.0) // Max Hiz (m/s) ve Max İvme (m/s²)
     );
 
-    private final ElevatorFeedforward feedforward = new ElevatorFeedforward(0, ElevatorConstants.kG, 0);
+    // Feedforward: kS (statik), kG (yercekimi), kV (hiz)
+    private final ElevatorFeedforward feedforward = new ElevatorFeedforward(
+        ElevatorConstants.kS, 
+        ElevatorConstants.kG, 
+        ElevatorConstants.kV
+    );
 
     public ElevatorSubsystem() {
         leftMotor = new SparkMax(ElevatorConstants.kLeftMotorCanId, MotorType.kBrushless);
         rightMotor = new SparkMax(ElevatorConstants.kRightMotorCanId, MotorType.kBrushless);
 
-        // Motor Konfigürasyonları
         SparkMaxConfig leftConfig = new SparkMaxConfig();
         SparkMaxConfig rightConfig = new SparkMaxConfig();
 
-        // Sağ motoru sol motorun takipçisi yap ve yönünü ters çevir
+        // 1. Enkoder donusum katsayisini dogrudan SparkMax'e tanimliyoruz (Motor turunu Metreye cevirir)
+        leftConfig.encoder
+            .positionConversionFactor(ElevatorConstants.kPositionFactor)
+            .velocityConversionFactor(ElevatorConstants.kPositionFactor / 60.0);
+
+        // 2. Yazilimsal Limitler (Soft Limits) - Mekanik kirilmalari onlemek icin
+        leftConfig.softLimit
+            .forwardSoftLimit(ElevatorConstants.kMaxHeightMeters)
+            .forwardSoftLimitEnabled(true)
+            .reverseSoftLimit(ElevatorConstants.kMinHeightMeters)
+            .reverseSoftLimitEnabled(true);
+
+        // Sag motor sol motoru takip eder ve yonu ters cevrilir
         rightConfig.follow(leftMotor, true);
 
+        // Konfigurasyonlari motorlara yukle
         leftMotor.configure(leftConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         rightMotor.configure(rightConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-        // Enkoderi sıfırla
+        // Baslangicta enkoderi sifirla
         leftMotor.getEncoder().setPosition(0);
     }
 
-    // Yükseklik Okuma (Metre)
+    // Yukseklik Okuma (Metre) - Artik dogrudan metre doner
     public double getHeightMeters() {
-        return leftMotor.getEncoder().getPosition() * ElevatorConstants.kPositionFactor;
+        return leftMotor.getEncoder().getPosition();
     }
 
-    // Manuel Motor Sürme (Joystick ile)
+    // Manuel Motor Surme (Joystick ile)
     public void setPower(double speed) {
-        // Limit Kontrolü
-        if ((getHeightMeters() >= ElevatorConstants.kMaxHeightMeters && speed > 0) ||
-            (getHeightMeters() <= ElevatorConstants.kMinHeightMeters && speed < 0)) {
-            leftMotor.set(0);
-        } else {
-            leftMotor.set(speed);
-        }
+        // Soft limit tanimlandigi icin direkt set edebiliriz
+        leftMotor.set(speed);
     }
 
-    // Kapalı Devre Hedef Yüksekliğe Gitme (PID)
+    // Kapali Devre Hedef Yukseklige Gitme (PID + Feedforward)
     public void goToHeight(double targetHeightMeters) {
         double pidOutput = pidController.calculate(getHeightMeters(), targetHeightMeters);
+        
+        // Trapzoid profilinin o anki hedef hizini kullanarak Feedforward hesaplama
         double ffOutput = feedforward.calculate(pidController.getSetpoint().velocity);
         
+        // Voltaj uygulayarak surme
         leftMotor.setVoltage(pidOutput + ffOutput);
     }
 
