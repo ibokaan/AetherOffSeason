@@ -27,7 +27,7 @@ public class SwerveModule {
         driveMotor = new SparkMax(driveCanId, MotorType.kBrushless);
         turnMotor = new SparkMax(turnCanId, MotorType.kBrushless);
 
-        // --- 1. SÜRÜŞ MOTORU KONFİGÜRASYONU ---
+        // --- 1. SuRus MOTORU KONFİGuRASYONU ---
         SparkMaxConfig driveConfig = new SparkMaxConfig();
         driveConfig.encoder
             .positionConversionFactor(DriveConstants.kDriveEncoderPositionFactor)
@@ -35,7 +35,7 @@ public class SwerveModule {
 
         driveMotor.configure(driveConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-        // --- 2. DÖNÜŞ MOTORU KONFİGÜRASYONU ---
+        // --- 2. DoNus MOTORU KONFİGuRASYONU ---
         SparkMaxConfig turnConfig = new SparkMaxConfig();
         turnConfig.encoder
             .positionConversionFactor(DriveConstants.kTurnEncoderPositionFactor)
@@ -43,13 +43,13 @@ public class SwerveModule {
 
         turnMotor.configure(turnConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-        // PID'nin -PI ile +PI radyan arasında kesintisiz dönmesini sağlar
+        // PID'nin -PI ile +PI radyan arasinda kesintisiz donmesini saglar
         turnPIDController.enableContinuousInput(-Math.PI, Math.PI);
     }
 
-    /** Modülün anlık dönme acısını offset dahil hesaplar (Radyan) */
+    /** Modulun anlik donme acisini offset dahil hesaplar (Radyan) */
     private Rotation2d getTurnAngle() {
-        // Enkoder konumundan offset cıkarılarak gercek acı bulunur
+        // Enkoder konumundan offset cikarilarak gercek aci bulunur
         double rawRadians = turnMotor.getEncoder().getPosition();
         return Rotation2d.fromRadians(rawRadians - encoderOffset);
     }
@@ -69,16 +69,16 @@ public class SwerveModule {
     }
 
     public void setDesiredState(SwerveModuleState desiredState) {
-        // 1. En kısa dönüş rotasını hesapla (Optimize et)
+        // 1. En kisa donus rotasini hesapla (Optimize et)
         SwerveModuleState state = SwerveModuleState.optimize(desiredState, getTurnAngle());
 
-        // 2. Sürüş motoru gücü (-1.0 ile 1.0 arası)
+        // 2. Surus motoru gucu (-1.0 ile 1.0 arasi)
         double driveOutput = state.speedMetersPerSecond / DriveConstants.kMaxSpeedMetersPerSecond;
         driveMotor.set(driveOutput);
 
-        // 3. Dönüş motoru PID hesabı ve sınırlandırma (Clamp)
+        // 3. Donus motoru PID hesabi ve sinirlandirma (Clamp)
         double turnOutput = turnPIDController.calculate(getTurnAngle().getRadians(), state.angle.getRadians());
-        turnOutput = MathUtil.clamp(turnOutput, -1.0, 1.0); // Motor gücünün %100'ü aşmasını önler
+        turnOutput = MathUtil.clamp(turnOutput, -1.0, 1.0); // Motor gucunun %100'u asmasini onler
         
         turnMotor.set(turnOutput);
     }
